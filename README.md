@@ -21,3 +21,6 @@
 
 #### Simulator: 
 * The `BackgroundTask` doesn't not support the simulator, so it has to run on the real devices 
+
+#### Get Test Result:
+* Hit a request for `GET: localhost:9090/items/`
