@@ -7,15 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B4BEDB3528C07604002F51A0 /* main.go in Resources */ = {isa = PBXBuildFile; fileRef = B4BEDB3428C07604002F51A0 /* main.go */; };
 		B4CF887C28B558E600A51AFF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CF887B28B558E600A51AFF /* AppDelegate.swift */; };
 		B4CF887E28B558E600A51AFF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CF887D28B558E600A51AFF /* SceneDelegate.swift */; };
 		B4CF888028B558E600A51AFF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CF887F28B558E600A51AFF /* ViewController.swift */; };
 		B4CF888328B558E600A51AFF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B4CF888128B558E600A51AFF /* Main.storyboard */; };
 		B4CF888528B558E800A51AFF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B4CF888428B558E800A51AFF /* Assets.xcassets */; };
 		B4CF888828B558E800A51AFF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B4CF888628B558E800A51AFF /* LaunchScreen.storyboard */; };
+		B4F8C85128BF12AF00EE16CA /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F8C85028BF12AF00EE16CA /* Item.swift */; };
+		B4F8C85328BF147500EE16CA /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F8C85228BF147500EE16CA /* Endpoint.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B4BEDB3428C07604002F51A0 /* main.go */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.go; sourceTree = "<group>"; };
 		B4CF887828B558E600A51AFF /* background_fetch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = background_fetch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4CF887B28B558E600A51AFF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B4CF887D28B558E600A51AFF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -24,6 +28,8 @@
 		B4CF888428B558E800A51AFF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B4CF888728B558E800A51AFF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B4CF888928B558E800A51AFF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B4F8C85028BF12AF00EE16CA /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
+		B4F8C85228BF147500EE16CA /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,9 +43,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B4BEDB3128C075BD002F51A0 /* backend */ = {
+			isa = PBXGroup;
+			children = (
+				B4BEDB3428C07604002F51A0 /* main.go */,
+			);
+			path = backend;
+			sourceTree = "<group>";
+		};
 		B4CF886F28B558E600A51AFF = {
 			isa = PBXGroup;
 			children = (
+				B4BEDB3128C075BD002F51A0 /* backend */,
 				B4CF887A28B558E600A51AFF /* background_fetch */,
 				B4CF887928B558E600A51AFF /* Products */,
 			);
@@ -63,6 +78,8 @@
 				B4CF888428B558E800A51AFF /* Assets.xcassets */,
 				B4CF888628B558E800A51AFF /* LaunchScreen.storyboard */,
 				B4CF888928B558E800A51AFF /* Info.plist */,
+				B4F8C85028BF12AF00EE16CA /* Item.swift */,
+				B4F8C85228BF147500EE16CA /* Endpoint.swift */,
 			);
 			path = background_fetch;
 			sourceTree = "<group>";
@@ -125,6 +142,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B4BEDB3528C07604002F51A0 /* main.go in Resources */,
 				B4CF888828B558E800A51AFF /* LaunchScreen.storyboard in Resources */,
 				B4CF888528B558E800A51AFF /* Assets.xcassets in Resources */,
 				B4CF888328B558E600A51AFF /* Main.storyboard in Resources */,
@@ -138,9 +156,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B4F8C85128BF12AF00EE16CA /* Item.swift in Sources */,
 				B4CF888028B558E600A51AFF /* ViewController.swift in Sources */,
 				B4CF887C28B558E600A51AFF /* AppDelegate.swift in Sources */,
 				B4CF887E28B558E600A51AFF /* SceneDelegate.swift in Sources */,
+				B4F8C85328BF147500EE16CA /* Endpoint.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,7 +236,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -270,7 +290,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -300,7 +320,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.kdong.background-fetch";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ken.dong.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -328,7 +348,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.kdong.background-fetch";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ken.dong.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

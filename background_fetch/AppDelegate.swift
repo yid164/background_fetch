@@ -6,31 +6,91 @@
 //
 
 import UIKit
+import BackgroundTasks
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        if #available(iOS 13.0, *) {
+            // initally mark the first lauch
+            Endpoint.put(item: Item(type: "First Lauch", count: 0)) { response in
+                NotificationCenter.default.post(name: .newCountFetched,
+                                                object: self,
+                                                userInfo: ["item": response])
+            }
+            BGTaskScheduler.shared.register(forTaskWithIdentifier: backgroundId, using: nil) { task in
+                self.handleAppRefresh(task: task as! BGProcessingTask)
+            }
+            print("register")
+        } else {
+            // or use some work around
+        }
+        
         return true
+    }
+    
+    func applicationDidEnterBackground(_ application: UIApplication) { }
+    
+    func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        print("Msg Background")
     }
 
     // MARK: UISceneSession Lifecycle
-
+    @available(iOS 13.0, *)
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-        // Called when a new scene session is being created.
-        // Use this method to select a configuration to create the new scene with.
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
 
-    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
-        // Called when the user discards a scene session.
-        // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
-        // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+    @available(iOS 13.0, *)
+    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) { }
+    
+    
+    @available(iOS 13.0, *)
+    func scheduleAppRefresh() {
+        let request = BGProcessingTaskRequest(identifier: backgroundId)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 60)
+        request.requiresExternalPower = false
+        request.requiresNetworkConnectivity = true
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            print("OK")
+        } catch {
+            print("Couldn't schedul app refresh: \(error)")
+        }
     }
 
+    @available(iOS 13.0, *)
+    func handleAppRefresh(task: BGProcessingTask) {
+        task.expirationHandler = {
+        Endpoint.urlSession.invalidateAndCancel()
+          task.setTaskCompleted(success: false)
+        }
+        
+        if let num = UserDefaults.standard.value(forKey: "bgtask") as? Int {
+            Endpoint.put(item: Item(type: "refresh", count: num)) { item in
+                NotificationCenter.default.post(name: .newCountFetched,
+                                                object: self,
+                                                userInfo: ["item": item])
+                task.setTaskCompleted(success: true)
+            }
+            UserDefaults.standard.set(num+1, forKey: "bgtask")
 
+        } else {
+            UserDefaults.standard.set(0, forKey: "bgtask")
+            Endpoint.put(item: Item(type: "refresh", count: 0)){ item in
+                NotificationCenter.default.post(name: .newCountFetched,
+                                                object: self,
+                                                userInfo: ["item": item])
+                task.setTaskCompleted(success: true)
+            }
+        }
+        
+        scheduleAppRefresh()
+    }
 }
 
+let backgroundId = "com.example.ken.process"
+
+extension Notification.Name {
+  static let newCountFetched = Notification.Name("com.example.ken.newCountFetched")
+}
