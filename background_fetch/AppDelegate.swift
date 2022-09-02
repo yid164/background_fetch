@@ -10,6 +10,7 @@ import BackgroundTasks
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if #available(iOS 13.0, *) {
             // initally mark the first lauch
@@ -19,7 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 userInfo: ["item": response])
             }
             BGTaskScheduler.shared.register(forTaskWithIdentifier: backgroundId, using: nil) { task in
-                self.handleAppRefresh(task: task as! BGProcessingTask)
+                self.handleAppRefresh(task: task as! BGAppRefreshTask)
             }
             print("register")
         } else {
@@ -47,23 +48,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     @available(iOS 13.0, *)
     func scheduleAppRefresh() {
-        let request = BGProcessingTaskRequest(identifier: backgroundId)
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 60)
-        request.requiresExternalPower = false
-        request.requiresNetworkConnectivity = true
+        let request = BGAppRefreshTaskRequest(identifier: backgroundId)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 2)
+//        request.requiresExternalPower = false
+//        request.requiresNetworkConnectivity = true
         do {
             try BGTaskScheduler.shared.submit(request)
-            print("OK")
+            print("BG Task submitted")
         } catch {
-            print("Couldn't schedul app refresh: \(error)")
+            print("BGTask couldn't submitted: \(error)")
         }
     }
 
+    // Change task to BGAppRefreshTask if required
     @available(iOS 13.0, *)
-    func handleAppRefresh(task: BGProcessingTask) {
+    func handleAppRefresh(task: BGAppRefreshTask) {
+        
+        scheduleAppRefresh()
+        
         task.expirationHandler = {
-        Endpoint.urlSession.invalidateAndCancel()
-          task.setTaskCompleted(success: false)
+              task.setTaskCompleted(success: false)
         }
         
         if let num = UserDefaults.standard.value(forKey: "bgtask") as? Int {
@@ -84,8 +88,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 task.setTaskCompleted(success: true)
             }
         }
-        
-        scheduleAppRefresh()
     }
 }
 

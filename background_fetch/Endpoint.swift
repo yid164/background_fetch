@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 @available (iOS 13, *)
 class Endpoint {

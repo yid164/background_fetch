@@ -35,7 +35,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     @available(iOS 13.0, *)
     func sceneDidEnterBackground(_ scene: UIScene) {
-        print("didEnterBackground: ", UserDefaults.standard.integer(forKey: "bgtask"))
+        print("App did enter the background mode")
         (UIApplication.shared.delegate as! AppDelegate).scheduleAppRefresh()
     }
 }
