@@ -9,45 +9,79 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    @IBOutlet weak var type: UILabel!
+    @IBOutlet weak var appRefresh: UILabel!
     
-    @IBOutlet weak var count: UILabel!
+    @IBOutlet weak var appRefreshType: UILabel!
     
-    @IBOutlet weak var time: UILabel!
+    @IBOutlet weak var appRefreshCount: UILabel!
     
-    var item: Item? = nil {
+    @IBOutlet weak var appRefreshTime: UILabel!
+    
+    @IBOutlet weak var processing: UILabel!
+    
+    @IBOutlet weak var processingType: UILabel!
+    
+    @IBOutlet weak var processingCount: UILabel!
+    
+    @IBOutlet weak var processingTime: UILabel!
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        registerForAppRefreshNotifications()
+        registerForProcessingNotifications()
+    }
+    
+    var processItem: Item? = nil {
         didSet {
-            if item != nil {
-                type.text = item!.type
-                count.text = "\(item!.count)"
-                time.text = item!.time
+            if processItem != nil {
+                processingType.text = processItem!.type
+                processingCount.text = "\(processItem!.count)"
+                processingTime.text = processItem!.time
             } else {
-                type.text = "This is type"
-                count.text = "This is the count"
-                time.text = "This is the time"
+                processingType.text = "This is type"
+                processingCount.text = "This is the count"
+                processingTime.text = "This is the time"
             }
         }
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        UserDefaults.standard.set(1, forKey: "bgtask")
-        print("viewDidLoad: ", UserDefaults.standard.integer(forKey: "bgtask"))
-        registerForNotifications()
+    var appRefreshItem: Item? = nil {
+        didSet {
+            if appRefreshItem != nil {
+                appRefreshType.text = appRefreshItem!.type
+                appRefreshCount.text = "\(appRefreshItem!.count)"
+                appRefreshTime.text = appRefreshItem!.time
+            } else {
+                appRefreshType.text = "This is type"
+                appRefreshCount.text = "This is the count"
+                appRefreshTime.text = "This is the time"
+            }
+        }
     }
     
-    func registerForNotifications() {
+    func registerForAppRefreshNotifications() {
       NotificationCenter.default.addObserver(
-        forName: .newCountFetched,
+        forName: .refreshCount,
         object: nil,
         queue: nil) { [weak self] (notification) in
-          print("notification received")
+            print("App Refresh Notification Received")
             guard let self = self else { return }
-          if let uInfo = notification.userInfo,
-             let item = uInfo["item"] as? Item {
-              self.item = item
-          }
-      }
+            if let uInfo = notification.userInfo, let item = uInfo["item"] as? Item {
+                self.appRefreshItem = item
+            }
+        }
+    }
+    
+    func registerForProcessingNotifications() {
+      NotificationCenter.default.addObserver(
+        forName: .processCount,
+        object: nil,
+        queue: nil) { [weak self] (notification) in
+            print("Processing Notification Received")
+            guard let self = self else { return }
+            if let uInfo = notification.userInfo, let item = uInfo["item"] as? Item {
+                self.processItem = item
+            }
+        }
     }
 }
-

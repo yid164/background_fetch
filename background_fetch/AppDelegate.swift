@@ -14,14 +14,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if #available(iOS 13.0, *) {
             // initally mark the first lauch
-            Endpoint.put(item: Item(type: "First Lauch", count: 0)) { response in
-                NotificationCenter.default.post(name: .newCountFetched,
+            Endpoint.put(item: Item(type: "First Lauch", count: -1)) { response in
+                NotificationCenter.default.post(name: .processCount,
+                                                object: self,
+                                                userInfo: ["item": response])
+                
+                NotificationCenter.default.post(name: .refreshCount,
                                                 object: self,
                                                 userInfo: ["item": response])
             }
-//            BGTaskScheduler.shared.register(forTaskWithIdentifier: appRefreshId, using: nil) { task in
-//                self.handleAppRefresh(task: task as! BGAppRefreshTask)
-//            }
+            BGTaskScheduler.shared.register(forTaskWithIdentifier: appRefreshId, using: nil) { task in
+                self.handleAppRefresh(task: task as! BGAppRefreshTask)
+            }
             BGTaskScheduler.shared.register(forTaskWithIdentifier: processId, using: nil) { task in
                 self.handleProcessingTask(task: task as! BGProcessingTask)
             }
@@ -50,13 +54,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @available(iOS 13.0, *)
     func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) { }
     
-    
     @available(iOS 13.0, *)
     func scheduleAppRefresh() {
         let request = BGAppRefreshTaskRequest(identifier: appRefreshId)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 2)
-//        request.requiresExternalPower = false
-//        request.requiresNetworkConnectivity = true
         do {
             try BGTaskScheduler.shared.submit(request)
             print("BG App Refresh Task submitted")
@@ -65,7 +66,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
-    // Change task to BGAppRefreshTask if required
     @available(iOS 13.0, *)
     func handleAppRefresh(task: BGAppRefreshTask) {
         
@@ -75,11 +75,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             task.setTaskCompleted(success: false)
         }
         
-        if let num = UserDefaults.standard.value(forKey: "bgtask") as? Int {
-            Endpoint.put(item: Item(type: "refresh", count: num)) { item in
-                NotificationCenter.default.post(name: .newCountFetched,
+        if let num = UserDefaults.standard.value(forKey: backgroundAppRefreshTaskKey) as? Int {
+            Endpoint.put(item: Item(type: backgroundAppRefreshTaskKey, count: num)) { item in
+                NotificationCenter.default.post(name: .refreshCount,
                                                 object: self,
                                                 userInfo: ["item": item])
+                // Hide this for testing the time
                 task.setTaskCompleted(success: true)
             }
             
@@ -93,14 +94,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //                }
 //            }
             
-            UserDefaults.standard.set(num+1, forKey: "bgtask")
+            UserDefaults.standard.set(num+1, forKey: backgroundAppRefreshTaskKey)
 
         } else {
-            UserDefaults.standard.set(0, forKey: "bgtask")
-            Endpoint.put(item: Item(type: "refresh", count: 0)){ item in
-                NotificationCenter.default.post(name: .newCountFetched,
+            UserDefaults.standard.set(0, forKey: backgroundAppRefreshTaskKey)
+            Endpoint.put(item: Item(type: backgroundAppRefreshTaskKey, count: 0)){ item in
+                NotificationCenter.default.post(name: .refreshCount,
                                                 object: self,
                                                 userInfo: ["item": item])
+                // Hide this for testing the time
                 task.setTaskCompleted(success: true)
             }
             
@@ -132,35 +134,62 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     @available(iOS 13.0, *)
     func handleProcessingTask(task: BGProcessingTask) {
-        scheduleProcessingTask()
         
         task.expirationHandler = {
               task.setTaskCompleted(success: false)
         }
         
-        if let num = UserDefaults.standard.value(forKey: "bgtask") as? Int {
-            Endpoint.put(item: Item(type: "processing", count: num)) { item in
-                NotificationCenter.default.post(name: .newCountFetched,
+        if let num = UserDefaults.standard.value(forKey: backgroundProcessTaskKey) as? Int {
+            Endpoint.put(item: Item(type: backgroundProcessTaskKey, count: num)) { item in
+                NotificationCenter.default.post(name: .processCount,
                                                 object: self,
                                                 userInfo: ["item": item])
+                // Hide this for testing the time
                 task.setTaskCompleted(success: true)
             }
+            
+            //1 min test
+//            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 60) {
+//                Endpoint.put(item: Item(type: "1 min", count: 1)) { item in
+//                    NotificationCenter.default.post(name: .newCountFetched,
+//                                                    object: self,
+//                                                    userInfo: ["item": item])
+//                    task.setTaskCompleted(success: true)
+//                }
+//            }
             UserDefaults.standard.set(num+1, forKey: "bgtask")
         } else {
-            UserDefaults.standard.set(0, forKey: "bgtask")
-            Endpoint.put(item: Item(type: "processing", count: 0)){ item in
-                NotificationCenter.default.post(name: .newCountFetched,
+            UserDefaults.standard.set(0, forKey: backgroundProcessTaskKey)
+            Endpoint.put(item: Item(type: backgroundProcessTaskKey, count: 0)){ item in
+                NotificationCenter.default.post(name: .processCount,
                                                 object: self,
                                                 userInfo: ["item": item])
+                // Hide this for testing the time
                 task.setTaskCompleted(success: true)
             }
+            
+            //1 min test
+//            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 60) {
+//                Endpoint.put(item: Item(type: "1 min", count: 1)) { item in
+//                    NotificationCenter.default.post(name: .newCountFetched,
+//                                                    object: self,
+//                                                    userInfo: ["item": item])
+//                    task.setTaskCompleted(success: true)
+//                }
+//            }
         }
+        scheduleProcessingTask()
     }
 }
 
-let processId = "com.example.ken.process"
-let appRefreshId = "com.example.ken.refresh"
+let processId = "com.example.ken.task.process"
+let appRefreshId = "com.example.ken.task.refresh"
+
+let backgroundAppRefreshTaskKey = "bgAppRefreshTask"
+let backgroundProcessTaskKey = "bgProcessTask"
 
 extension Notification.Name {
-  static let newCountFetched = Notification.Name("com.example.ken.newCountFetched")
+    static let processCount = Notification.Name("com.example.ken.task.processCount")
+    
+    static let refreshCount = Notification.Name("com.example.ken.task.refreshCount")
 }
