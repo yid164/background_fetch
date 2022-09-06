@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		B4BEDB3528C07604002F51A0 /* main.go in Resources */ = {isa = PBXBuildFile; fileRef = B4BEDB3428C07604002F51A0 /* main.go */; };
+		B4BEDB5B28C70B70002F51A0 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4BEDB5A28C70B70002F51A0 /* Notifier.swift */; };
+		B4BEDB5D28C70B84002F51A0 /* KeyChains.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4BEDB5C28C70B84002F51A0 /* KeyChains.swift */; };
 		B4CF887C28B558E600A51AFF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CF887B28B558E600A51AFF /* AppDelegate.swift */; };
 		B4CF887E28B558E600A51AFF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CF887D28B558E600A51AFF /* SceneDelegate.swift */; };
 		B4CF888028B558E600A51AFF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CF887F28B558E600A51AFF /* ViewController.swift */; };
@@ -20,6 +22,8 @@
 
 /* Begin PBXFileReference section */
 		B4BEDB3428C07604002F51A0 /* main.go */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.go; sourceTree = "<group>"; };
+		B4BEDB5A28C70B70002F51A0 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
+		B4BEDB5C28C70B84002F51A0 /* KeyChains.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyChains.swift; sourceTree = "<group>"; };
 		B4CF887828B558E600A51AFF /* background_fetch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = background_fetch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4CF887B28B558E600A51AFF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B4CF887D28B558E600A51AFF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -80,6 +84,8 @@
 				B4CF888928B558E800A51AFF /* Info.plist */,
 				B4F8C85028BF12AF00EE16CA /* Item.swift */,
 				B4F8C85228BF147500EE16CA /* Endpoint.swift */,
+				B4BEDB5A28C70B70002F51A0 /* Notifier.swift */,
+				B4BEDB5C28C70B84002F51A0 /* KeyChains.swift */,
 			);
 			path = background_fetch;
 			sourceTree = "<group>";
@@ -157,10 +163,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				B4F8C85128BF12AF00EE16CA /* Item.swift in Sources */,
+				B4BEDB5B28C70B70002F51A0 /* Notifier.swift in Sources */,
 				B4CF888028B558E600A51AFF /* ViewController.swift in Sources */,
 				B4CF887C28B558E600A51AFF /* AppDelegate.swift in Sources */,
 				B4CF887E28B558E600A51AFF /* SceneDelegate.swift in Sources */,
 				B4F8C85328BF147500EE16CA /* Endpoint.swift in Sources */,
+				B4BEDB5D28C70B84002F51A0 /* KeyChains.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

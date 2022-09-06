@@ -11,6 +11,8 @@ import BackgroundTasks
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
+    public var bgTaskMode: BackgroundMode? = nil
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if #available(iOS 13.0, *) {
             // initally mark the first lauch
@@ -23,12 +25,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                 object: self,
                                                 userInfo: ["item": response])
             }
-            BGTaskScheduler.shared.register(forTaskWithIdentifier: appRefreshId, using: nil) { task in
+            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.appRefresh.taskId, using: nil) { task in
                 self.handleAppRefresh(task: task as! BGAppRefreshTask)
             }
-            BGTaskScheduler.shared.register(forTaskWithIdentifier: processId, using: nil) { task in
-                self.handleProcessingTask(task: task as! BGProcessingTask)
-            }
+//            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { task in
+//                self.handleProcessingTask(task: task as! BGProcessingTask)
+//            }
+            
+            Notifier.checkNotificationPermission()
+            
             print("register")
         } else {
             // or use some work around
@@ -56,8 +61,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     @available(iOS 13.0, *)
     func scheduleAppRefresh() {
-        let request = BGAppRefreshTaskRequest(identifier: appRefreshId)
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 2)
+        let request = BGAppRefreshTaskRequest(identifier: BackgroundMode.appRefresh.taskId)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 60)
         do {
             try BGTaskScheduler.shared.submit(request)
             print("BG App Refresh Task submitted")
@@ -69,17 +74,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @available(iOS 13.0, *)
     func handleAppRefresh(task: BGAppRefreshTask) {
         
-        scheduleAppRefresh()
+//        scheduleAppRefresh()
         
         task.expirationHandler = {
             task.setTaskCompleted(success: false)
         }
         
-        if let num = UserDefaults.standard.value(forKey: backgroundAppRefreshTaskKey) as? Int {
-            Endpoint.put(item: Item(type: backgroundAppRefreshTaskKey, count: num)) { item in
+        if let num = UserDefaults.standard.value(forKey: BackgroundMode.appRefresh.userDefaultKey) as? Int {
+            Endpoint.put(item: Item(type: BackgroundMode.appRefresh.rawValue, count: num)) { item in
                 NotificationCenter.default.post(name: .refreshCount,
                                                 object: self,
                                                 userInfo: ["item": item])
+                
+                Notifier.scheduleLocalNotification(mode: BackgroundMode.appRefresh.rawValue)
+                
                 // Hide this for testing the time
                 task.setTaskCompleted(success: true)
             }
@@ -94,14 +102,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //                }
 //            }
             
-            UserDefaults.standard.set(num+1, forKey: backgroundAppRefreshTaskKey)
+            UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
 
         } else {
-            UserDefaults.standard.set(0, forKey: backgroundAppRefreshTaskKey)
-            Endpoint.put(item: Item(type: backgroundAppRefreshTaskKey, count: 0)){ item in
+            UserDefaults.standard.set(0, forKey: BackgroundMode.appRefresh.userDefaultKey)
+            Endpoint.put(item: Item(type: BackgroundMode.appRefresh.rawValue, count: 0)){ item in
                 NotificationCenter.default.post(name: .refreshCount,
                                                 object: self,
                                                 userInfo: ["item": item])
+                
+                Notifier.scheduleLocalNotification(mode: BackgroundMode.appRefresh.rawValue)
+                
                 // Hide this for testing the time
                 task.setTaskCompleted(success: true)
             }
@@ -115,15 +126,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //                    task.setTaskCompleted(success: true)
 //                }
 //            }
+            
         }
+        bgTaskMode = .appRefresh
+        scheduleAppRefresh()
     }
     
     @available(iOS 13.0, *)
     func scheduleProcessingTask() {
-        let request = BGProcessingTaskRequest(identifier: processId)
+        let request = BGProcessingTaskRequest(identifier: BackgroundMode.processing.taskId)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 60)
         request.requiresExternalPower = false
         request.requiresNetworkConnectivity = true
+        
         do {
             try BGTaskScheduler.shared.submit(request)
             print("BG Processing Task submitted")
@@ -139,11 +154,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
               task.setTaskCompleted(success: false)
         }
         
-        if let num = UserDefaults.standard.value(forKey: backgroundProcessTaskKey) as? Int {
-            Endpoint.put(item: Item(type: backgroundProcessTaskKey, count: num)) { item in
+        if let num = UserDefaults.standard.value(forKey: BackgroundMode.processing.userDefaultKey) as? Int {
+            Endpoint.put(item: Item(type: BackgroundMode.processing.rawValue, count: num)) { item in
                 NotificationCenter.default.post(name: .processCount,
                                                 object: self,
                                                 userInfo: ["item": item])
+                
+                Notifier.scheduleLocalNotification(mode: BackgroundMode.processing.rawValue)
+                
                 // Hide this for testing the time
                 task.setTaskCompleted(success: true)
             }
@@ -157,13 +175,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //                    task.setTaskCompleted(success: true)
 //                }
 //            }
-            UserDefaults.standard.set(num+1, forKey: "bgtask")
+            UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)
         } else {
-            UserDefaults.standard.set(0, forKey: backgroundProcessTaskKey)
-            Endpoint.put(item: Item(type: backgroundProcessTaskKey, count: 0)){ item in
+            UserDefaults.standard.set(0, forKey: BackgroundMode.processing.userDefaultKey)
+            Endpoint.put(item: Item(type: BackgroundMode.processing.rawValue, count: 0)){ item in
                 NotificationCenter.default.post(name: .processCount,
                                                 object: self,
                                                 userInfo: ["item": item])
+                
+                Notifier.scheduleLocalNotification(mode: BackgroundMode.processing.rawValue)
+                
                 // Hide this for testing the time
                 task.setTaskCompleted(success: true)
             }
@@ -178,18 +199,44 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //                }
 //            }
         }
+        bgTaskMode = .processing
         scheduleProcessingTask()
     }
 }
-
-let processId = "com.example.ken.task.process"
-let appRefreshId = "com.example.ken.task.refresh"
-
-let backgroundAppRefreshTaskKey = "bgAppRefreshTask"
-let backgroundProcessTaskKey = "bgProcessTask"
 
 extension Notification.Name {
     static let processCount = Notification.Name("com.example.ken.task.processCount")
     
     static let refreshCount = Notification.Name("com.example.ken.task.refreshCount")
+}
+
+enum BackgroundMode: String {
+    case processing, appRefresh
+    
+    var rawValue: String {
+        switch self {
+        case .appRefresh:
+            return "App Refresh Task"
+        case .processing:
+            return "Processing Task"
+        }
+    }
+    
+    var taskId: String {
+        switch self {
+        case .appRefresh:
+            return "com.example.ken.task.refresh"
+        case .processing:
+            return "com.example.ken.task.process"
+        }
+    }
+    
+    var userDefaultKey: String {
+        switch self {
+        case .processing:
+            return "bgProcessTaskKey"
+        case .appRefresh:
+            return "bgProcessTaskKey"
+        }
+    }
 }

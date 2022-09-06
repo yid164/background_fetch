@@ -23,9 +23,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidDisconnect(_ scene: UIScene) { }
 
     @available(iOS 13.0, *)
-    func sceneDidBecomeActive(_ scene: UIScene) {
-        print("didBecomeActive: ", UserDefaults.standard.integer(forKey: "bgtask"))
-    }
+    func sceneDidBecomeActive(_ scene: UIScene) { }
 
     @available(iOS 13.0, *)
     func sceneWillResignActive(_ scene: UIScene) { }
@@ -36,7 +34,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     @available(iOS 13.0, *)
     func sceneDidEnterBackground(_ scene: UIScene) {
         print("App did enter the background mode")
+//        let delegate = UIApplication.shared.delegate as! AppDelegate
+//        let mode = delegate.bgTaskMode
+//        if mode == nil {
+////            delegate.scheduleProcessingTask()
+//            delegate.scheduleAppRefresh()
+//        } else if mode == .appRefresh {
+//            delegate.scheduleAppRefresh()
+//        } else {
+//            delegate.scheduleProcessingTask()
+//        }
         (UIApplication.shared.delegate as! AppDelegate).scheduleAppRefresh()
-        (UIApplication.shared.delegate as! AppDelegate).scheduleProcessingTask()
+//        (UIApplication.shared.delegate as! AppDelegate).scheduleProcessingTask()
     }
 }
