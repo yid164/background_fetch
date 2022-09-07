@@ -24,3 +24,12 @@
 
 #### Get Test Result:
 * Hit a request for `GET: localhost:9090/items/`
+
+#### Local Notification:
+* Once the request sent, it will automatically pop a Local User Notification
+
+#### Keychains:
+* Write a sample Keychain class, and update the keychain once the request send
+
+#### FileWriter: 
+* Since there are some limitation for the local server, I wrote a FileWriter to record the log for `AppRefresh` and `Processing` Tasks
