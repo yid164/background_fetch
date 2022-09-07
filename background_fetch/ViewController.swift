@@ -24,11 +24,16 @@ class ViewController: UIViewController {
     @IBOutlet weak var processingCount: UILabel!
     
     @IBOutlet weak var processingTime: UILabel!
+    
+    @IBOutlet weak var logTextView: UITextView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         registerForAppRefreshNotifications()
         registerForProcessingNotifications()
+        registerForLogTextNotification()
+        self.logTextView.isEditable = false
+        self.logTextView.isScrollEnabled = true
     }
     
     var processItem: Item? = nil {
@@ -83,5 +88,25 @@ class ViewController: UIViewController {
                 self.processItem = item
             }
         }
+    }
+    
+    func registerForLogTextNotification() {
+        NotificationCenter.default.addObserver(
+            forName: .logUpdate,
+            object: nil,
+            queue: nil) { [weak self] (notification) in
+              print("Processing Notification Received")
+              guard let self = self else { return }
+              if let uInfo = notification.userInfo, let update = uInfo["update"] as? Bool {
+                  if update {
+                      if #available(iOS 13.4, *) {
+                          self.logTextView.text = FileWriter.readFile()
+                      } else {
+                          self.logTextView.text = "Version Error"
+                          // Fallback on earlier versions
+                      }
+                  }
+              }
+          }
     }
 }

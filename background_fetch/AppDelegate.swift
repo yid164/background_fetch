@@ -11,28 +11,47 @@ import BackgroundTasks
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
-    public var bgTaskMode: BackgroundMode? = nil
+    public var processRuns: Bool = false
+    
+    public var appRefreshRuns: Bool = false
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        if #available(iOS 13.0, *) {
-            // initally mark the first lauch
-            Endpoint.put(item: Item(type: "First Lauch", count: -1)) { response in
-                NotificationCenter.default.post(name: .processCount,
-                                                object: self,
-                                                userInfo: ["item": response])
-                
-                NotificationCenter.default.post(name: .refreshCount,
-                                                object: self,
-                                                userInfo: ["item": response])
+        if #available(iOS 13.4, *) {
+            
+            Notifier.checkNotificationPermission()
+            
+            UserDefaults.standard.set(0, forKey: BackgroundMode.appRefresh.userDefaultKey)
+            
+            UserDefaults.standard.set(0, forKey: BackgroundMode.processing.userDefaultKey)
+            
+            KeychainManager.createKeychain(password: "HelloWorld".data(using: .utf8) ?? Data(), service: BackgroundMode.processing.rawValue, account: "Ken")
+            
+            KeychainManager.createKeychain(password: "HelloWorld".data(using: .utf8) ?? Data(), service: BackgroundMode.appRefresh.rawValue, account: "Ken")
+            
+            let item = Item(type: "First Launch", count: 0)
+            
+            FileWriter.startWritting(item.toLog) {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .processCount,
+                                                    object: self,
+                                                    userInfo: ["item": item])
+                    
+                    NotificationCenter.default.post(name: .refreshCount,
+                                                    object: self,
+                                                    userInfo: ["item": item])
+                    
+                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                }
+
             }
+            
             BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.appRefresh.taskId, using: nil) { task in
                 self.handleAppRefresh(task: task as! BGAppRefreshTask)
             }
-//            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { task in
-//                self.handleProcessingTask(task: task as! BGProcessingTask)
-//            }
             
-            Notifier.checkNotificationPermission()
+            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { task in
+                self.handleProcessingTask(task: task as! BGProcessingTask)
+            }
             
             print("register")
         } else {
@@ -71,64 +90,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
-    @available(iOS 13.0, *)
+    @available(iOS 13.4, *)
     func handleAppRefresh(task: BGAppRefreshTask) {
-        
-//        scheduleAppRefresh()
-        
+                
         task.expirationHandler = {
             task.setTaskCompleted(success: false)
         }
         
-        if let num = UserDefaults.standard.value(forKey: BackgroundMode.appRefresh.userDefaultKey) as? Int {
-            Endpoint.put(item: Item(type: BackgroundMode.appRefresh.rawValue, count: num)) { item in
-                NotificationCenter.default.post(name: .refreshCount,
-                                                object: self,
-                                                userInfo: ["item": item])
-                
+        let num = UserDefaults.standard.value(forKey: BackgroundMode.appRefresh.userDefaultKey) as? Int ?? 0
+        
+        let item = Item(type: BackgroundMode.appRefresh.rawValue, count: num)
+        
+        FileWriter.appendFile(item.toLog) {
+            DispatchQueue.main.async {
                 Notifier.scheduleLocalNotification(mode: BackgroundMode.appRefresh.rawValue)
-                
-                // Hide this for testing the time
+                UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
+                KeychainManager.updateKeychain(password: item.toLog.data(using: .utf8)!, service: BackgroundMode.processing.rawValue, account: "Ken")
+                NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                self.appRefreshRuns = false
                 task.setTaskCompleted(success: true)
             }
-            
-            // Testing the time avaiable
-//            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 25) {
-//                Endpoint.put(item: Item(type: "25 seconds", count: 0)) { item in
-//                    NotificationCenter.default.post(name: .newCountFetched,
-//                                                    object: self,
-//                                                    userInfo: ["item": item])
-//                    task.setTaskCompleted(success: true)
-//                }
-//            }
-            
-            UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
-
-        } else {
-            UserDefaults.standard.set(0, forKey: BackgroundMode.appRefresh.userDefaultKey)
-            Endpoint.put(item: Item(type: BackgroundMode.appRefresh.rawValue, count: 0)){ item in
-                NotificationCenter.default.post(name: .refreshCount,
-                                                object: self,
-                                                userInfo: ["item": item])
-                
-                Notifier.scheduleLocalNotification(mode: BackgroundMode.appRefresh.rawValue)
-                
-                // Hide this for testing the time
-                task.setTaskCompleted(success: true)
-            }
-            
-            // Testing the time avaiable
-//            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 25) {
-//                Endpoint.put(item: Item(type: "25 seconds", count: 0)) { item in
-//                    NotificationCenter.default.post(name: .newCountFetched,
-//                                                    object: self,
-//                                                    userInfo: ["item": item])
-//                    task.setTaskCompleted(success: true)
-//                }
-//            }
-            
         }
-        bgTaskMode = .appRefresh
+        
         scheduleAppRefresh()
     }
     
@@ -147,59 +130,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
-    @available(iOS 13.0, *)
+    @available(iOS 13.4, *)
     func handleProcessingTask(task: BGProcessingTask) {
         
         task.expirationHandler = {
               task.setTaskCompleted(success: false)
         }
         
-        if let num = UserDefaults.standard.value(forKey: BackgroundMode.processing.userDefaultKey) as? Int {
-            Endpoint.put(item: Item(type: BackgroundMode.processing.rawValue, count: num)) { item in
-                NotificationCenter.default.post(name: .processCount,
-                                                object: self,
-                                                userInfo: ["item": item])
-                
+        let num = UserDefaults.standard.value(forKey: BackgroundMode.processing.userDefaultKey) as? Int ?? 0
+        
+        let item = Item(type: BackgroundMode.processing.rawValue, count: num)
+        
+        FileWriter.appendFile(item.toLog) {
+            DispatchQueue.main.async {
                 Notifier.scheduleLocalNotification(mode: BackgroundMode.processing.rawValue)
-                
-                // Hide this for testing the time
+                UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)
+                KeychainManager.updateKeychain(password: item.toLog.data(using: .utf8)!, service: BackgroundMode.appRefresh.rawValue, account: "Ken")
+                NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                self.processRuns = false
                 task.setTaskCompleted(success: true)
             }
-            
-            //1 min test
-//            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 60) {
-//                Endpoint.put(item: Item(type: "1 min", count: 1)) { item in
-//                    NotificationCenter.default.post(name: .newCountFetched,
-//                                                    object: self,
-//                                                    userInfo: ["item": item])
-//                    task.setTaskCompleted(success: true)
-//                }
-//            }
-            UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)
-        } else {
-            UserDefaults.standard.set(0, forKey: BackgroundMode.processing.userDefaultKey)
-            Endpoint.put(item: Item(type: BackgroundMode.processing.rawValue, count: 0)){ item in
-                NotificationCenter.default.post(name: .processCount,
-                                                object: self,
-                                                userInfo: ["item": item])
-                
-                Notifier.scheduleLocalNotification(mode: BackgroundMode.processing.rawValue)
-                
-                // Hide this for testing the time
-                task.setTaskCompleted(success: true)
-            }
-            
-            //1 min test
-//            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 60) {
-//                Endpoint.put(item: Item(type: "1 min", count: 1)) { item in
-//                    NotificationCenter.default.post(name: .newCountFetched,
-//                                                    object: self,
-//                                                    userInfo: ["item": item])
-//                    task.setTaskCompleted(success: true)
-//                }
-//            }
         }
-        bgTaskMode = .processing
         scheduleProcessingTask()
     }
 }
@@ -208,6 +159,8 @@ extension Notification.Name {
     static let processCount = Notification.Name("com.example.ken.task.processCount")
     
     static let refreshCount = Notification.Name("com.example.ken.task.refreshCount")
+    
+    static let logUpdate = Notification.Name("com.example.ken.task.log")
 }
 
 enum BackgroundMode: String {

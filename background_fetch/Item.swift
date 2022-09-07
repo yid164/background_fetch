@@ -10,11 +10,17 @@ import Foundation
 struct Item: Codable {
     let type: String
     let count: Int
-    var time: String?
+    var time: String = ""
     
     init(type: String, count: Int) {
         self.type = type
         self.count = count
-        self.time = nil
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
+        self.time = formatter.string(from: Date())
+    }
+    
+    var toLog: String {
+        "\(time): \(type) - \(count)"
     }
 }
