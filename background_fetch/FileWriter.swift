@@ -73,7 +73,7 @@ public class FileWriter {
             if FileManager.default.fileExists(atPath: fileURL.path) {
                 if let fileHandle = try? FileHandle(forWritingTo: fileURL) {
                     try fileHandle.seekToEnd()
-                    try fileHandle.write(contentsOf: "\n(text)".data(using: .utf8)!)
+                    try fileHandle.write(contentsOf: "\n\(text)".data(using: .utf8)!)
                     try fileHandle.close()
                     complete()
                 }

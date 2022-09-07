@@ -26,7 +26,7 @@ public class Notifier {
         let notificationContent = UNMutableNotificationContent()
 
         // Configure Notification Content
-        notificationContent.title = "Local Notifications"
+        notificationContent.title = "Background Fetch Notifications"
         notificationContent.subtitle = "Background Data Sent by \(mode)"
         notificationContent.body = "The data has been sent to local server by \(mode) mode"
 

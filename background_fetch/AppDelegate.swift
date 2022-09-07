@@ -24,6 +24,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             
             UserDefaults.standard.set(0, forKey: BackgroundMode.processing.userDefaultKey)
             
+            KeychainManager.removeKeychain(service: BackgroundMode.processing.rawValue, account: "Ken")
+            
+            KeychainManager.removeKeychain(service: BackgroundMode.appRefresh.rawValue, account: "Ken")
+            
             KeychainManager.createKeychain(password: "HelloWorld".data(using: .utf8) ?? Data(), service: BackgroundMode.processing.rawValue, account: "Ken")
             
             KeychainManager.createKeychain(password: "HelloWorld".data(using: .utf8) ?? Data(), service: BackgroundMode.appRefresh.rawValue, account: "Ken")
@@ -49,9 +53,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 self.handleAppRefresh(task: task as! BGAppRefreshTask)
             }
             
-            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { task in
-                self.handleProcessingTask(task: task as! BGProcessingTask)
-            }
+//            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { task in
+//                self.handleProcessingTask(task: task as! BGProcessingTask)
+//            }
             
             print("register")
         } else {
@@ -92,6 +96,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     @available(iOS 13.4, *)
     func handleAppRefresh(task: BGAppRefreshTask) {
+        
+        scheduleAppRefresh()
                 
         task.expirationHandler = {
             task.setTaskCompleted(success: false)
@@ -101,19 +107,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let item = Item(type: BackgroundMode.appRefresh.rawValue, count: num)
         
-        FileWriter.appendFile(item.toLog) {
+        let keyData = KeychainManager.getKeychain(service: BackgroundMode.appRefresh.rawValue, account: "Ken")
+        let keyStr = String(decoding: keyData, as: UTF8.self)
+        
+        let log = "\(item.toLog)\nKeychain: \(keyStr)"
+        
+        FileWriter.appendFile(log) {
             self.appRefreshRuns = true
             DispatchQueue.main.async {
                 Notifier.scheduleLocalNotification(mode: BackgroundMode.appRefresh.rawValue)
                 UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
-                KeychainManager.updateKeychain(password: item.toLog.data(using: .utf8)!, service: BackgroundMode.processing.rawValue, account: "Ken")
                 NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
                 self.appRefreshRuns = false
                 task.setTaskCompleted(success: true)
             }
         }
-        
-        scheduleAppRefresh()
     }
     
     @available(iOS 13.0, *)
@@ -142,12 +150,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let item = Item(type: BackgroundMode.processing.rawValue, count: num)
         
-        FileWriter.appendFile(item.toLog) {
+        let keyData = KeychainManager.getKeychain(service: BackgroundMode.processing.rawValue, account: "Ken")
+        let keyStr = String(decoding: keyData, as: UTF8.self)
+        
+        let log = "\(item.toLog)\nKeychain: \(keyStr)"
+        
+        FileWriter.appendFile(log) {
             self.processRuns = true
             DispatchQueue.main.async {
                 Notifier.scheduleLocalNotification(mode: BackgroundMode.processing.rawValue)
                 UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)
-                KeychainManager.updateKeychain(password: item.toLog.data(using: .utf8)!, service: BackgroundMode.appRefresh.rawValue, account: "Ken")
                 NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
                 self.processRuns = false
                 task.setTaskCompleted(success: true)

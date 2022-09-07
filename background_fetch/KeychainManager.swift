@@ -15,7 +15,8 @@ public class KeychainManager {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service as AnyObject,
             kSecAttrAccount as String: account as AnyObject,
-            kSecValueData as String: password as AnyObject
+            kSecValueData as String: password as AnyObject,
+            kSecAttrAccessible as String : kSecAttrAccessibleAfterFirstUnlock
         ]
         let status = SecItemAdd(
             query as CFDictionary,
@@ -77,6 +78,7 @@ public class KeychainManager {
             kSecAttrService as String: service as AnyObject,
             kSecAttrAccount as String: account as AnyObject,
             kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccessible as String : kSecAttrAccessibleAfterFirstUnlock,
             kSecMatchLimit as String: kSecMatchLimitOne,
             kSecReturnData as String: kCFBooleanTrue
         ]
@@ -91,10 +93,10 @@ public class KeychainManager {
             if let password = itemCopy as? Data {
                 return password
             } else {
-                return "Get Keychain Error".data(using: .utf8)!
+                return "Get Keychain Error: Password Data issue".data(using: .utf8)!
             }
         } else {
-            return "Get Keychain Error".data(using: .utf8)!
+            return "Get Keychain Error: status not correct".data(using: .utf8)!
         }
     }
 }

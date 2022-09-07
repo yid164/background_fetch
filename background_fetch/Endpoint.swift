@@ -14,21 +14,18 @@ class Endpoint {
     static var urlSession = URLSession(configuration: .default)
     
     static func put(item: Item, completionHandler: @escaping (_ response: Item) -> Void) {
-        print("PUT")
-        // Add the local machine IP address for API request
         let url = URL(string: "http://192.168.31.206:9090/item/")
         guard let requestUrl = url else { fatalError() }
-        // Prepare URL Request Object
         var request = URLRequest(url: requestUrl)
         request.httpMethod = "PUT"
         request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-        // or
+
         request.cachePolicy = .reloadIgnoringCacheData
         
         let today = Date()
         let formatter1 = DateFormatter()
-        formatter1.dateFormat = "yyyy/MM/dd HH:mm"
+        formatter1.dateFormat = "yyyy/MM/dd HH:mm:ss"
         
         let body: [String : Any] = [
             "type": "\(item.type)",
