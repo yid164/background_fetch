@@ -102,6 +102,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let item = Item(type: BackgroundMode.appRefresh.rawValue, count: num)
         
         FileWriter.appendFile(item.toLog) {
+            self.appRefreshRuns = true
             DispatchQueue.main.async {
                 Notifier.scheduleLocalNotification(mode: BackgroundMode.appRefresh.rawValue)
                 UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
@@ -142,6 +143,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let item = Item(type: BackgroundMode.processing.rawValue, count: num)
         
         FileWriter.appendFile(item.toLog) {
+            self.processRuns = true
             DispatchQueue.main.async {
                 Notifier.scheduleLocalNotification(mode: BackgroundMode.processing.rawValue)
                 UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)

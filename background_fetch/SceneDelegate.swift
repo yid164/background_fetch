@@ -38,12 +38,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         if !delegate.appRefreshRuns {
             delegate.scheduleAppRefresh()
-            delegate.appRefreshRuns = true
+//            delegate.appRefreshRuns = true
         }
         
         if !delegate.processRuns {
             delegate.scheduleProcessingTask()
-            delegate.processRuns = true
+//            delegate.processRuns = true
         }
     }
 }
