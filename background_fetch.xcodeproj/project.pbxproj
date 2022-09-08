@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B488A3F628C8559100C118EA /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B488A3F528C8559100C118EA /* FileWriter.swift */; };
+		B488A3FE28C959AD00C118EA /* BackgroundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B488A3FD28C959AD00C118EA /* BackgroundManager.swift */; };
 		B4BEDB3528C07604002F51A0 /* main.go in Resources */ = {isa = PBXBuildFile; fileRef = B4BEDB3428C07604002F51A0 /* main.go */; };
 		B4BEDB5B28C70B70002F51A0 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4BEDB5A28C70B70002F51A0 /* Notifier.swift */; };
 		B4BEDB5D28C70B84002F51A0 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4BEDB5C28C70B84002F51A0 /* KeychainManager.swift */; };
@@ -23,6 +24,7 @@
 
 /* Begin PBXFileReference section */
 		B488A3F528C8559100C118EA /* FileWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWriter.swift; sourceTree = "<group>"; };
+		B488A3FD28C959AD00C118EA /* BackgroundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundManager.swift; sourceTree = "<group>"; };
 		B4BEDB3428C07604002F51A0 /* main.go */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.go; sourceTree = "<group>"; };
 		B4BEDB5A28C70B70002F51A0 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		B4BEDB5C28C70B84002F51A0 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				B4CF887B28B558E600A51AFF /* AppDelegate.swift */,
+				B488A3FD28C959AD00C118EA /* BackgroundManager.swift */,
 				B4CF887D28B558E600A51AFF /* SceneDelegate.swift */,
 				B4CF887F28B558E600A51AFF /* ViewController.swift */,
 				B4CF888128B558E600A51AFF /* Main.storyboard */,
@@ -171,6 +174,7 @@
 				B4CF887C28B558E600A51AFF /* AppDelegate.swift in Sources */,
 				B4CF887E28B558E600A51AFF /* SceneDelegate.swift in Sources */,
 				B488A3F628C8559100C118EA /* FileWriter.swift in Sources */,
+				B488A3FE28C959AD00C118EA /* BackgroundManager.swift in Sources */,
 				B4F8C85328BF147500EE16CA /* Endpoint.swift in Sources */,
 				B4BEDB5D28C70B84002F51A0 /* KeychainManager.swift in Sources */,
 			);

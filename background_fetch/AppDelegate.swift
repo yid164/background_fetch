@@ -11,10 +11,6 @@ import BackgroundTasks
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
-    public var processRuns: Bool = false
-    
-    public var appRefreshRuns: Bool = false
-    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if #available(iOS 13.4, *) {
             
@@ -23,6 +19,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             UserDefaults.standard.set(0, forKey: BackgroundMode.appRefresh.userDefaultKey)
             
             UserDefaults.standard.set(0, forKey: BackgroundMode.processing.userDefaultKey)
+            
+            UserDefaults.standard.set(nil, forKey: lastBackgroundTimeKey)
             
             KeychainManager.removeKeychain(service: BackgroundMode.processing.rawValue, account: "Ken")
             
@@ -34,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             
             let item = Item(type: "First Launch", count: 0)
             
-            FileWriter.startWritting(item.toLog) {
+            FileWriter.shared.startWritting(item.toLog) {
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(name: .processCount,
                                                     object: self,
@@ -53,9 +51,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 self.handleAppRefresh(task: task as! BGAppRefreshTask)
             }
             
-//            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { task in
-//                self.handleProcessingTask(task: task as! BGProcessingTask)
-//            }
+            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { task in
+                self.handleProcessingTask(task: task as! BGProcessingTask)
+            }
             
             print("register")
         } else {
@@ -82,10 +80,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @available(iOS 13.0, *)
     func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) { }
     
-    @available(iOS 13.0, *)
+    @available(iOS 13.4, *)
     func scheduleAppRefresh() {
         let request = BGAppRefreshTaskRequest(identifier: BackgroundMode.appRefresh.taskId)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 60)
+        
+        var requireHandle = true
+        if let lastBackgroundFetch = lastBackgroundFetchTime {
+            let dateNow = dateFormatter.date(from: dateFormatter.string(from: Date()))!
+            if lastBackgroundFetch.timeIntervalSince(dateNow) < minTimeInterval {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
+                FileWriter.shared.appendFile("\(formatter.string(from: Date())): App Refresh Time Limit") {
+                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                }
+                requireHandle = false
+            }
+        }
+        
+        guard requireHandle else { return }
+        
         do {
             try BGTaskScheduler.shared.submit(request)
             print("BG App Refresh Task submitted")
@@ -107,29 +121,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let item = Item(type: BackgroundMode.appRefresh.rawValue, count: num)
         
-        let keyData = KeychainManager.getKeychain(service: BackgroundMode.appRefresh.rawValue, account: "Ken")
-        let keyStr = String(decoding: keyData, as: UTF8.self)
+        let log = "\(item.toLog)"
         
-        let log = "\(item.toLog)\nKeychain: \(keyStr)"
-        
-        FileWriter.appendFile(log) {
-            self.appRefreshRuns = true
+        FileWriter.shared.appendFile(log) {
             DispatchQueue.main.async {
-                Notifier.scheduleLocalNotification(mode: BackgroundMode.appRefresh.rawValue)
                 UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
                 NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
-                self.appRefreshRuns = false
+                self.setBackgroundFetchTime()
                 task.setTaskCompleted(success: true)
             }
         }
     }
     
-    @available(iOS 13.0, *)
+    @available(iOS 13.4, *)
     func scheduleProcessingTask() {
         let request = BGProcessingTaskRequest(identifier: BackgroundMode.processing.taskId)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 60)
         request.requiresExternalPower = false
         request.requiresNetworkConnectivity = true
+        
+        var requireHandle = true
+        if let lastBackgroundFetch = lastBackgroundFetchTime {
+            let dateNow = dateFormatter.date(from: dateFormatter.string(from: Date()))!
+            if lastBackgroundFetch.timeIntervalSince(dateNow) < minTimeInterval {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
+                FileWriter.shared.appendFile("\(formatter.string(from: Date())): Process Time Limit") {
+                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                }
+                requireHandle = false
+            }
+        }
+        
+        guard requireHandle else { return }
         
         do {
             try BGTaskScheduler.shared.submit(request)
@@ -150,22 +174,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let item = Item(type: BackgroundMode.processing.rawValue, count: num)
         
-        let keyData = KeychainManager.getKeychain(service: BackgroundMode.processing.rawValue, account: "Ken")
-        let keyStr = String(decoding: keyData, as: UTF8.self)
+        let log = "\(item.toLog)"
         
-        let log = "\(item.toLog)\nKeychain: \(keyStr)"
-        
-        FileWriter.appendFile(log) {
-            self.processRuns = true
+        FileWriter.shared.appendFile(log) {
             DispatchQueue.main.async {
-                Notifier.scheduleLocalNotification(mode: BackgroundMode.processing.rawValue)
                 UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)
                 NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
-                self.processRuns = false
+                self.setBackgroundFetchTime()
                 task.setTaskCompleted(success: true)
             }
         }
+        
         scheduleProcessingTask()
+    }
+    
+    private var lastBackgroundFetchTime: Date? {
+        if let lastFetchTimeString = UserDefaults.standard.string(forKey: lastBackgroundTimeKey) {
+            print("\(lastFetchTimeString)")
+            return dateFormatter.date(from: lastFetchTimeString)
+        } else {
+            return nil
+        }
+    }
+    
+    private func setBackgroundFetchTime(_ date: Date = Date()) {
+        UserDefaults.standard.set(dateFormatter.string(from: Date()), forKey: lastBackgroundTimeKey)
     }
 }
 
@@ -176,6 +209,18 @@ extension Notification.Name {
     
     static let logUpdate = Notification.Name("com.example.ken.task.log")
 }
+
+var dateFormatter: DateFormatter {
+    let formatter = DateFormatter()
+    formatter.timeZone = TimeZone(identifier: "UTC")
+    formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
+    return formatter
+}
+
+//let maxTimeInterval: Double = 10.0
+let minTimeInterval: Double = 2.0 * 60.0 // 5 mins
+
+let lastBackgroundTimeKey = "com.example.ken.task.background.time"
 
 enum BackgroundMode: String {
     case processing, appRefresh

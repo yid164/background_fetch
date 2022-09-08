@@ -100,7 +100,7 @@ class ViewController: UIViewController {
               if let uInfo = notification.userInfo, let update = uInfo["update"] as? Bool {
                   if update {
                       if #available(iOS 13.4, *) {
-                          self.logTextView.text = FileWriter.readFile()
+                          self.logTextView.text = FileWriter.shared.readFile()
                       } else {
                           self.logTextView.text = "Version Error"
                           // Fallback on earlier versions

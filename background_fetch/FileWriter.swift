@@ -10,9 +10,11 @@ import Foundation
 @available(iOS 13.4, *)
 public class FileWriter {
     
-    static let fileURLString: String = "file.text"
+    static let shared = FileWriter()
     
-    static func cleanFile() {
+    let fileURLString: String = "file.text"
+    
+    func cleanFile() {
         if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
             let fileURL = dir.appendingPathComponent(fileURLString)
             
@@ -31,7 +33,7 @@ public class FileWriter {
         }
     }
     
-    static func createFile(_ text: String = "", complete: @escaping () -> () = {}) {
+    func createFile(_ text: String = "", complete: @escaping () -> () = {}) {
 
         let text = text //just a text
 
@@ -49,7 +51,7 @@ public class FileWriter {
         }
     }
     
-    static func readFile() -> String {
+    func readFile() -> String {
         
         guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return "ERROR TO READ FILE" }
         
@@ -64,7 +66,7 @@ public class FileWriter {
         }
     }
     
-    static func appendFile(_ text: String = "", complete: @escaping () -> () = {}) {
+    func appendFile(_ text: String = "", complete: @escaping () -> () = {}) {
         guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         
         let fileURL = dir.appendingPathComponent(fileURLString)
@@ -85,7 +87,7 @@ public class FileWriter {
         }
     }
     
-    static func startWritting(_ text: String, complete: @escaping () -> () = {}) {
+    func startWritting(_ text: String, complete: @escaping () -> () = {}) {
         cleanFile()
         createFile(text, complete: complete)
     }

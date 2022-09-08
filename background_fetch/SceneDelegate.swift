@@ -35,8 +35,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidEnterBackground(_ scene: UIScene) {
         print("App did enter the background mode")
         let delegate = UIApplication.shared.delegate as! AppDelegate
-        delegate.scheduleAppRefresh()
-//        delegate.scheduleProcessingTask()
+        
+        if #available(iOS 13.4, *) {
+            delegate.scheduleAppRefresh()
+            delegate.scheduleProcessingTask()
+        }
+
         
 //        if !delegate.appRefreshRuns {
 //            delegate.scheduleAppRefresh()
