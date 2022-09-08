@@ -95,7 +95,7 @@ class ViewController: UIViewController {
             forName: .logUpdate,
             object: nil,
             queue: nil) { [weak self] (notification) in
-              print("Processing Notification Received")
+              print("Log Notification Received")
               guard let self = self else { return }
               if let uInfo = notification.userInfo, let update = uInfo["update"] as? Bool {
                   if update {

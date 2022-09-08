@@ -92,7 +92,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
                 FileWriter.shared.appendFile("\(formatter.string(from: Date())): App Refresh Time Limit") {
-                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                    }
+
                 }
                 requireHandle = false
             }
@@ -147,7 +150,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
                 FileWriter.shared.appendFile("\(formatter.string(from: Date())): Process Time Limit") {
-                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                    }
                 }
                 requireHandle = false
             }
