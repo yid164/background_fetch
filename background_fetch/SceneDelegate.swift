@@ -37,19 +37,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let delegate = UIApplication.shared.delegate as! AppDelegate
         
         if #available(iOS 13.4, *) {
-            delegate.scheduleAppRefresh()
-            delegate.scheduleProcessingTask()
+            delegate.concurrentQueue.async {
+                delegate.scheduleAppRefresh()
+                delegate.scheduleProcessingTask()
+            }
         }
-
-        
-//        if !delegate.appRefreshRuns {
-//            delegate.scheduleAppRefresh()
-////            delegate.appRefreshRuns = true
-//        }
-        
-//        if !delegate.processRuns {
-//            delegate.scheduleProcessingTask()
-////            delegate.processRuns = true
-//        }
     }
 }

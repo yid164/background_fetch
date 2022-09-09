@@ -32,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             
             let item = Item(type: "First Launch", count: 0)
             
-            FileWriter.shared.startWritting(item.toLog) {
+            FileWriter.shared.startWritting("\(dateFormatter.string(from: Date())): \(item.toLog)") {
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(name: .processCount,
                                                     object: self,
@@ -67,6 +67,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         print("Did enter background")
     }
     
+    // not use iOS 9+
     func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         print("Msg Background")
     }
@@ -83,25 +84,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @available(iOS 13.4, *)
     func scheduleAppRefresh() {
         let request = BGAppRefreshTaskRequest(identifier: BackgroundMode.appRefresh.taskId)
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 60)
-        
-        var requireHandle = true
-        if let lastBackgroundFetch = lastBackgroundFetchTime {
-            let dateNow = dateFormatter.date(from: dateFormatter.string(from: Date()))!
-            if lastBackgroundFetch.timeIntervalSince(dateNow) < minTimeInterval {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
-                FileWriter.shared.appendFile("\(formatter.string(from: Date())): App Refresh Time Limit") {
-                    DispatchQueue.main.async {
-                        NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
-                    }
-
-                }
-                requireHandle = false
-            }
-        }
-        
-        guard requireHandle else { return }
+        request.earliestBeginDate = Date(timeIntervalSinceNow: UIApplication.backgroundFetchIntervalMinimum)
         
         do {
             try BGTaskScheduler.shared.submit(request)
@@ -114,51 +97,36 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @available(iOS 13.4, *)
     func handleAppRefresh(task: BGAppRefreshTask) {
         
-        scheduleAppRefresh()
-                
-        task.expirationHandler = {
-            task.setTaskCompleted(success: false)
-        }
-        
-        let num = UserDefaults.standard.value(forKey: BackgroundMode.appRefresh.userDefaultKey) as? Int ?? 0
-        
-        let item = Item(type: BackgroundMode.appRefresh.rawValue, count: num)
-        
-        let log = "\(item.toLog)"
-        
-        FileWriter.shared.appendFile(log) {
-            DispatchQueue.main.async {
-                UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
-                NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
-                self.setBackgroundFetchTime()
-                task.setTaskCompleted(success: true)
+        concurrentQueue.async {
+            task.expirationHandler = {
+                task.setTaskCompleted(success: false)
             }
+            
+            let num = UserDefaults.standard.value(forKey: BackgroundMode.appRefresh.userDefaultKey) as? Int ?? 0
+            
+            let item = Item(type: BackgroundMode.appRefresh.rawValue, count: num)
+            
+            UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
+            
+            let log = "\(dateFormatter.string(from: Date())): \(item.toLog)"
+            
+            FileWriter.shared.appendFile(log) {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                    UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
+                }
+            }
+            task.setTaskCompleted(success: true)
+            self.scheduleAppRefresh()
         }
     }
     
     @available(iOS 13.4, *)
     func scheduleProcessingTask() {
         let request = BGProcessingTaskRequest(identifier: BackgroundMode.processing.taskId)
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 60)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: UIApplication.backgroundFetchIntervalMinimum)
         request.requiresExternalPower = false
         request.requiresNetworkConnectivity = true
-        
-        var requireHandle = true
-        if let lastBackgroundFetch = lastBackgroundFetchTime {
-            let dateNow = dateFormatter.date(from: dateFormatter.string(from: Date()))!
-            if lastBackgroundFetch.timeIntervalSince(dateNow) < minTimeInterval {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
-                FileWriter.shared.appendFile("\(formatter.string(from: Date())): Process Time Limit") {
-                    DispatchQueue.main.async {
-                        NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
-                    }
-                }
-                requireHandle = false
-            }
-        }
-        
-        guard requireHandle else { return }
         
         do {
             try BGTaskScheduler.shared.submit(request)
@@ -170,27 +138,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     @available(iOS 13.4, *)
     func handleProcessingTask(task: BGProcessingTask) {
-        
-        task.expirationHandler = {
-              task.setTaskCompleted(success: false)
-        }
-        
-        let num = UserDefaults.standard.value(forKey: BackgroundMode.processing.userDefaultKey) as? Int ?? 0
-        
-        let item = Item(type: BackgroundMode.processing.rawValue, count: num)
-        
-        let log = "\(item.toLog)"
-        
-        FileWriter.shared.appendFile(log) {
-            DispatchQueue.main.async {
-                UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)
-                NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
-                self.setBackgroundFetchTime()
-                task.setTaskCompleted(success: true)
+        concurrentQueue.async {
+            task.expirationHandler = {
+                  task.setTaskCompleted(success: false)
             }
+            
+            let num = UserDefaults.standard.value(forKey: BackgroundMode.processing.userDefaultKey) as? Int ?? 0
+            
+            let item = Item(type: BackgroundMode.processing.rawValue, count: num)
+            
+            let log = "\(dateFormatter.string(from: Date())): \(item.toLog)"
+            
+            FileWriter.shared.appendFile(log) {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                    UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)
+                }
+            }
+            
+            task.setTaskCompleted(success: true)
+            self.scheduleProcessingTask()
+            
         }
-        
-        scheduleProcessingTask()
     }
     
     private var lastBackgroundFetchTime: Date? {
@@ -205,6 +174,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private func setBackgroundFetchTime(_ date: Date = Date()) {
         UserDefaults.standard.set(dateFormatter.string(from: Date()), forKey: lastBackgroundTimeKey)
     }
+    
+    let concurrentQueue = DispatchQueue(label: "ken.async", qos: .background)
 }
 
 extension Notification.Name {
@@ -217,7 +188,7 @@ extension Notification.Name {
 
 var dateFormatter: DateFormatter {
     let formatter = DateFormatter()
-    formatter.timeZone = TimeZone(identifier: "UTC")
+//    formatter.timeZone = TimeZone(identifier: "UTC")
     formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
     return formatter
 }
@@ -253,7 +224,7 @@ enum BackgroundMode: String {
         case .processing:
             return "bgProcessTaskKey"
         case .appRefresh:
-            return "bgProcessTaskKey"
+            return "bgAppRefreshTaskKey"
         }
     }
 }
