@@ -13,45 +13,24 @@
 //    
 //    static let shared = BackgroundManager()
 //    
+//    let taskQueue = TaskQueue()
+//    
 //    // public api: register when app launched
-//    func register() {
+//    func register(complete: @escaping () async -> Void) async {
 //        
-////        let task = Task
-//        
-//        UserDefaults.standard.set(0, forKey: BackgroundMode.appRefresh.userDefaultKey)
-//        
-//        UserDefaults.standard.set(0, forKey: BackgroundMode.processing.userDefaultKey)
-//        
-//        let item = Item(type: "First Launch", count: 0)
-//        
-//        FileWriter.shared.startWritting(item.toLog) {
-//            DispatchQueue.main.async {
-//                NotificationCenter.default.post(name: .processCount,
-//                                                object: AppDelegate.self,
-//                                                userInfo: ["item": item])
-//                
-//                NotificationCenter.default.post(name: .refreshCount,
-//                                                object: AppDelegate.self,
-//                                                userInfo: ["item": item])
-//                
-//                NotificationCenter.default.post(name: .logUpdate,
-//                                                object: AppDelegate.self,
-//                                                userInfo: ["update": true])
+//        taskQueue.dispatch() {
+//            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.appRefresh.taskId, using: nil) { [weak self] task in
+//                guard let self = self else { return }
+//                self.handleAppRefresh(task: task as! BGAppRefreshTask)
 //            }
-//
+//            
+//            BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { [weak self] task in
+//                guard let self = self else { return }
+//                self.handleProcessingTask(task: task as! BGProcessingTask)
+//            }
+//            
+//            await complete()
 //        }
-//        
-//        BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.appRefresh.taskId, using: nil) { [weak self] task in
-//            guard let self = self else { return }
-//            self.handleAppRefresh(task: task as! BGAppRefreshTask)
-//        }
-//        
-//        BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.processing.taskId, using: nil) { [weak self] task in
-//            guard let self = self else { return }
-//            self.handleProcessingTask(task: task as! BGProcessingTask)
-//        }
-//        
-//
 //        print("register")
 //    }
 //    
@@ -192,16 +171,31 @@
 //            print("BG Processing Task couldn't submitted: \(error)")
 //        }
 //    }
+//    
+//    private func handleTasks(tasks: [BGTask: () async -> Void]) async {
+//        for task in tasks.keys {
+//            if task is BGProcessingTask {
+//                if let execute = tasks[task] {
+//                    await execute()
+//                }
+//                
+//            } else if task is BGAppRefreshTask {
+//                if let execute = tasks[task] {
+//                    await execute()
+//                }
+//            }
+//        }
+//    }
 //}
 //
-//@available(iOS 13.0.0, *)
+//@available(iOS 13.0, *)
 //class TaskQueue {
 //    
 //    private actor TaskQueueActor {
 //        private var blocks : [() async -> Void] = []
 //        private var currentTask : Task<Void,Never>? = nil
 //        
-//        func addBlock(block:@escaping () async -> Void){
+//        func addBlock(block: @escaping () async -> Void) {
 //            blocks.append(block)
 //            next()
 //        }

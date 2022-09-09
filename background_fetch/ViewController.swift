@@ -32,7 +32,7 @@ class ViewController: UIViewController {
         registerForAppRefreshNotifications()
         registerForProcessingNotifications()
         registerForLogTextNotification()
-        self.logTextView.isEditable = false
+        self.logTextView.isEditable = true
         self.logTextView.isScrollEnabled = true
     }
     
@@ -69,7 +69,7 @@ class ViewController: UIViewController {
         forName: .refreshCount,
         object: nil,
         queue: nil) { [weak self] (notification) in
-            print("App Refresh Notification Received")
+            print("\(dateFormatter.string(from: Date())): App Refresh Notification Received")
             guard let self = self else { return }
             if let uInfo = notification.userInfo, let item = uInfo["item"] as? Item {
                 self.appRefreshItem = item
@@ -82,7 +82,7 @@ class ViewController: UIViewController {
         forName: .processCount,
         object: nil,
         queue: nil) { [weak self] (notification) in
-            print("Processing Notification Received")
+            print("\(dateFormatter.string(from: Date())): Processing Notification Received")
             guard let self = self else { return }
             if let uInfo = notification.userInfo, let item = uInfo["item"] as? Item {
                 self.processItem = item
@@ -95,7 +95,7 @@ class ViewController: UIViewController {
             forName: .logUpdate,
             object: nil,
             queue: nil) { [weak self] (notification) in
-              print("Log Notification Received")
+                print("\(dateFormatter.string(from: Date())): Log Notification Received")
               guard let self = self else { return }
               if let uInfo = notification.userInfo, let update = uInfo["update"] as? Bool {
                   if update {

@@ -21,6 +21,6 @@ struct Item: Codable {
     }
     
     var toLog: String {
-        "\(time): \(type) - \(count)"
+        "Background Executed -- \(type) -- executed: \(count) times"
     }
 }
