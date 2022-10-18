@@ -6,107 +6,74 @@
 //
 
 import UIKit
+import MessageUI
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, MFMailComposeViewControllerDelegate {
+        
+    @IBOutlet weak var lastRunningType: UILabel!
+    @IBOutlet weak var lastRunningTime: UILabel!
+    @IBOutlet weak var totalHits: UILabel!
     
-    @IBOutlet weak var appRefresh: UILabel!
-    
-    @IBOutlet weak var appRefreshType: UILabel!
-    
-    @IBOutlet weak var appRefreshCount: UILabel!
-    
-    @IBOutlet weak var appRefreshTime: UILabel!
-    
-    @IBOutlet weak var processing: UILabel!
-    
-    @IBOutlet weak var processingType: UILabel!
-    
-    @IBOutlet weak var processingCount: UILabel!
-    
-    @IBOutlet weak var processingTime: UILabel!
-    
-    @IBOutlet weak var logTextView: UITextView!
+    @IBOutlet weak var sendLogMailButton: UIButton!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        registerForAppRefreshNotifications()
-        registerForProcessingNotifications()
-        registerForLogTextNotification()
-        self.logTextView.isEditable = true
-        self.logTextView.isScrollEnabled = true
+        registerNotification()
+        sendLogMailButton.addTarget(self, action: #selector(self.sendEmail), for: .allEvents)
+        sendLogMailButton.setTitle("Send Mail", for: .normal)
     }
     
-    var processItem: Item? = nil {
-        didSet {
-            if processItem != nil {
-                processingType.text = processItem!.type
-                processingCount.text = "\(processItem!.count)"
-                processingTime.text = processItem!.time
-            } else {
-                processingType.text = "This is type"
-                processingCount.text = "This is the count"
-                processingTime.text = "This is the time"
-            }
-        }
-    }
-    
-    var appRefreshItem: Item? = nil {
-        didSet {
-            if appRefreshItem != nil {
-                appRefreshType.text = appRefreshItem!.type
-                appRefreshCount.text = "\(appRefreshItem!.count)"
-                appRefreshTime.text = appRefreshItem!.time
-            } else {
-                appRefreshType.text = "This is type"
-                appRefreshCount.text = "This is the count"
-                appRefreshTime.text = "This is the time"
-            }
-        }
-    }
-    
-    func registerForAppRefreshNotifications() {
-      NotificationCenter.default.addObserver(
-        forName: .refreshCount,
-        object: nil,
-        queue: nil) { [weak self] (notification) in
-            print("\(dateFormatter.string(from: Date())): App Refresh Notification Received")
-            guard let self = self else { return }
-            if let uInfo = notification.userInfo, let item = uInfo["item"] as? Item {
-                self.appRefreshItem = item
-            }
-        }
-    }
-    
-    func registerForProcessingNotifications() {
-      NotificationCenter.default.addObserver(
-        forName: .processCount,
-        object: nil,
-        queue: nil) { [weak self] (notification) in
-            print("\(dateFormatter.string(from: Date())): Processing Notification Received")
-            guard let self = self else { return }
-            if let uInfo = notification.userInfo, let item = uInfo["item"] as? Item {
-                self.processItem = item
-            }
-        }
-    }
-    
-    func registerForLogTextNotification() {
+    func registerNotification() {
         NotificationCenter.default.addObserver(
-            forName: .logUpdate,
-            object: nil,
-            queue: nil) { [weak self] (notification) in
-                print("\(dateFormatter.string(from: Date())): Log Notification Received")
+            forName: .backgroundNotification,
+          object: nil,
+          queue: nil) { [weak self] (notification) in
+              print("\(dateFormatter.string(from: Date())): Background")
               guard let self = self else { return }
-              if let uInfo = notification.userInfo, let update = uInfo["update"] as? Bool {
-                  if update {
-                      if #available(iOS 13.4, *) {
-                          self.logTextView.text = FileWriter.shared.readFile()
-                      } else {
-                          self.logTextView.text = "Version Error"
-                          // Fallback on earlier versions
-                      }
-                  }
+              if let uInfo = notification.userInfo, let data = uInfo["data"] as? BackgroundData {
+                  self.currentData = data
               }
           }
+    }
+    
+    var currentData: BackgroundData? = nil {
+        didSet {
+            if currentData != nil {
+                lastRunningType.text = "Type: \(currentData!.type.rawValue)"
+                totalHits.text = "Hits: \(currentData!.count)"
+                lastRunningTime.text = "Time: \(dateFormatter.string(from: currentData!.time))"
+            } else {
+                lastRunningType.text = "Last Type"
+                totalHits.text = "Total Hits"
+                lastRunningTime.text = "Last Time"
+            }
+        }
+    }
+    
+    @objc func sendEmail() {
+        if MFMailComposeViewController.canSendMail() {
+            let mail = MFMailComposeViewController()
+            mail.mailComposeDelegate = self
+            mail.setToRecipients(["kdong@fortinet.com"])
+            if #available(iOS 13.4, *) {
+                let file = FileWriter.shared
+                if let data = file.fileData {
+                    mail.addAttachmentData(data, mimeType: "text/plain", fileName: "log")
+                }
+            } else {
+                // Fallback on earlier versions
+            }
+            
+            mail.setSubject("Background Log")
+            mail.setMessageBody("<p>Background Log File</p>", isHTML: true)
+
+            present(mail, animated: true)
+        } else {
+            // show failure alert
+        }
+    }
+
+    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
+        controller.dismiss(animated: true)
     }
 }

@@ -14,37 +14,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if #available(iOS 13.4, *) {
             
-            Notifier.checkNotificationPermission()
+            let data = BackgroundData(type: .firstLaunch, time: Date(), count: 0)
             
-            UserDefaults.standard.set(0, forKey: BackgroundMode.appRefresh.userDefaultKey)
+            let log = "\(data.toLog)0"
             
-            UserDefaults.standard.set(0, forKey: BackgroundMode.processing.userDefaultKey)
-            
-            UserDefaults.standard.set(nil, forKey: lastBackgroundTimeKey)
-            
-            KeychainManager.removeKeychain(service: BackgroundMode.processing.rawValue, account: "Ken")
-            
-            KeychainManager.removeKeychain(service: BackgroundMode.appRefresh.rawValue, account: "Ken")
-            
-            KeychainManager.createKeychain(password: "HelloWorld".data(using: .utf8) ?? Data(), service: BackgroundMode.processing.rawValue, account: "Ken")
-            
-            KeychainManager.createKeychain(password: "HelloWorld".data(using: .utf8) ?? Data(), service: BackgroundMode.appRefresh.rawValue, account: "Ken")
-            
-            let item = Item(type: "First Launch", count: 0)
-            
-            FileWriter.shared.startWritting("\(dateFormatter.string(from: Date())): \(item.toLog)") {
+            FileWriter.shared.startWritting(log) {
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .processCount,
+                    saveToGroup(backgroundData: data)
+                    NotificationCenter.default.post(name: .backgroundNotification,
                                                     object: self,
-                                                    userInfo: ["item": item])
-                    
-                    NotificationCenter.default.post(name: .refreshCount,
-                                                    object: self,
-                                                    userInfo: ["item": item])
-                    
-                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
+                                                    userInfo: ["data": data])
                 }
-
             }
             
             BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundMode.appRefresh.taskId, using: nil) { task in
@@ -102,18 +82,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 task.setTaskCompleted(success: false)
             }
             
-            let num = UserDefaults.standard.value(forKey: BackgroundMode.appRefresh.userDefaultKey) as? Int ?? 0
+            var timeInterval = ""
+            var count = 0
             
-            let item = Item(type: BackgroundMode.appRefresh.rawValue, count: num)
+            if let storedData = getBackgroundDataFromGroup {
+                timeInterval = storedData.timeIntervalInMinsSince(since: Date())
+                count += storedData.count + 1
+            }
             
-            UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
+            let data = BackgroundData(type: .appRefresh, time: Date(), count: count)
             
-            let log = "\(dateFormatter.string(from: Date())): \(item.toLog)"
+            let log = "\(data.toLog)\(timeInterval)"
             
             FileWriter.shared.appendFile(log) {
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
-                    UserDefaults.standard.set(num+1, forKey: BackgroundMode.appRefresh.userDefaultKey)
+                    saveToGroup(backgroundData: data)
+                    NotificationCenter.default.post(name: .backgroundNotification,
+                                                    object: self,
+                                                    userInfo: ["data": data])
                 }
             }
             task.setTaskCompleted(success: true)
@@ -143,16 +129,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                   task.setTaskCompleted(success: false)
             }
             
-            let num = UserDefaults.standard.value(forKey: BackgroundMode.processing.userDefaultKey) as? Int ?? 0
+            var timeInterval = ""
+            var count = 0
             
-            let item = Item(type: BackgroundMode.processing.rawValue, count: num)
+            if let storedData = getBackgroundDataFromGroup {
+                timeInterval = storedData.timeIntervalInMinsSince(since: Date())
+                count += storedData.count + 1
+            }
             
-            let log = "\(dateFormatter.string(from: Date())): \(item.toLog)"
+            let data = BackgroundData(type: .processing, time: Date(), count: count)
+            
+            let log = "\(data.toLog)\(timeInterval)"
             
             FileWriter.shared.appendFile(log) {
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .logUpdate, object: self, userInfo: ["update": true])
-                    UserDefaults.standard.set(num+1, forKey: BackgroundMode.processing.userDefaultKey)
+                    saveToGroup(backgroundData: data)
+                    NotificationCenter.default.post(name: .backgroundNotification,
+                                                    object: self,
+                                                    userInfo: ["data": data])
                 }
             }
             
@@ -162,28 +156,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
-    private var lastBackgroundFetchTime: Date? {
-        if let lastFetchTimeString = UserDefaults.standard.string(forKey: lastBackgroundTimeKey) {
-            print("\(lastFetchTimeString)")
-            return dateFormatter.date(from: lastFetchTimeString)
-        } else {
-            return nil
-        }
-    }
-    
-    private func setBackgroundFetchTime(_ date: Date = Date()) {
-        UserDefaults.standard.set(dateFormatter.string(from: Date()), forKey: lastBackgroundTimeKey)
-    }
-    
     let concurrentQueue = DispatchQueue(label: "ken.async", qos: .background)
 }
 
 extension Notification.Name {
-    static let processCount = Notification.Name("com.example.ken.task.processCount")
-    
-    static let refreshCount = Notification.Name("com.example.ken.task.refreshCount")
-    
-    static let logUpdate = Notification.Name("com.example.ken.task.log")
+    static let backgroundNotification = Notification.Name("com.example.ken.background.notification")
 }
 
 var dateFormatter: DateFormatter {
@@ -193,13 +170,10 @@ var dateFormatter: DateFormatter {
     return formatter
 }
 
-//let maxTimeInterval: Double = 10.0
-let minTimeInterval: Double = 2.0 * 60.0 // 5 mins
-
 let lastBackgroundTimeKey = "com.example.ken.task.background.time"
 
-enum BackgroundMode: String {
-    case processing, appRefresh
+enum BackgroundMode: String, Codable {
+    case processing, appRefresh, firstLaunch
     
     var rawValue: String {
         switch self {
@@ -207,6 +181,8 @@ enum BackgroundMode: String {
             return "App Refresh Task"
         case .processing:
             return "Processing Task"
+        default:
+            return "First Launch"
         }
     }
     
@@ -216,6 +192,8 @@ enum BackgroundMode: String {
             return "com.example.ken.task.refresh"
         case .processing:
             return "com.example.ken.task.process"
+        default:
+            return ""
         }
     }
     
@@ -225,6 +203,8 @@ enum BackgroundMode: String {
             return "bgProcessTaskKey"
         case .appRefresh:
             return "bgAppRefreshTaskKey"
+        default:
+            return ""
         }
     }
 }

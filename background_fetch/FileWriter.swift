@@ -75,7 +75,7 @@ public class FileWriter {
             if FileManager.default.fileExists(atPath: fileURL.path) {
                 if let fileHandle = try? FileHandle(forWritingTo: fileURL) {
                     try fileHandle.seekToEnd()
-                    try fileHandle.write(contentsOf: "\n\(text)".data(using: .utf8)!)
+                    try fileHandle.write(contentsOf: "\n\(dateFormatter.string(from: Date())): \(text)".data(using: .utf8)!)
                     try fileHandle.close()
                     complete()
                 }
@@ -90,5 +90,22 @@ public class FileWriter {
     func startWritting(_ text: String, complete: @escaping () -> () = {}) {
         cleanFile()
         createFile(text, complete: complete)
+    }
+}
+
+@available(iOS 13.4, *)
+extension FileWriter {
+    var fileData: Data? {
+        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
+        
+        let fileURL = dir.appendingPathComponent(fileURLString)
+        do {
+            let text = try String(contentsOf: fileURL, encoding: .utf8)
+            return text.data(using: .utf8)
+        }
+        catch {
+            print("Error to Read File")
+            return nil
+        }
     }
 }
