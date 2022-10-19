@@ -32,7 +32,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="JI6-Ib-y8e" userLabel="Send Log Mail Button">
-                                <rect key="frame" x="124" y="636" width="180" height="107"/>
+                                <rect key="frame" x="104" y="590" width="221" height="76"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="Button"/>
@@ -44,11 +44,18 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="x4M-VV-Jv8" userLabel="Clean Log Button">
+                                <rect key="frame" x="104" y="710" width="221" height="76"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Button"/>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                     </view>
                     <connections>
+                        <outlet property="cleanLogButton" destination="x4M-VV-Jv8" id="w7u-Zl-JZo"/>
                         <outlet property="lastRunningTime" destination="9o3-gH-WhE" id="uih-YP-KFf"/>
                         <outlet property="lastRunningType" destination="yqp-Lp-hhZ" id="Mt0-Zx-psZ"/>
                         <outlet property="sendLogMailButton" destination="JI6-Ib-y8e" id="8YK-iM-7Zl"/>

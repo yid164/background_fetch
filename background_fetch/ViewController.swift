@@ -15,12 +15,16 @@ class ViewController: UIViewController, MFMailComposeViewControllerDelegate {
     @IBOutlet weak var totalHits: UILabel!
     
     @IBOutlet weak var sendLogMailButton: UIButton!
+    @IBOutlet weak var cleanLogButton: UIButton!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         registerNotification()
         sendLogMailButton.addTarget(self, action: #selector(self.sendEmail), for: .allEvents)
         sendLogMailButton.setTitle("Send Mail", for: .normal)
+        cleanLogButton.tintColor = .red
+        cleanLogButton.setTitle("Clean Log", for: .normal)
+        cleanLogButton.addTarget(self, action: #selector(self.cleanLog), for: .allTouchEvents)
     }
     
     func registerNotification() {
@@ -39,7 +43,7 @@ class ViewController: UIViewController, MFMailComposeViewControllerDelegate {
     var currentData: BackgroundData? = nil {
         didSet {
             if currentData != nil {
-                lastRunningType.text = "Type: \(currentData!.type.rawValue)"
+                lastRunningType.text = "Type: \(currentData!.type)"
                 totalHits.text = "Hits: \(currentData!.count)"
                 lastRunningTime.text = "Time: \(dateFormatter.string(from: currentData!.time))"
             } else {
@@ -47,6 +51,15 @@ class ViewController: UIViewController, MFMailComposeViewControllerDelegate {
                 totalHits.text = "Total Hits"
                 lastRunningTime.text = "Last Time"
             }
+        }
+    }
+    
+    @objc func cleanLog() {
+        if #available(iOS 13.4, *) {
+            cleanGroup()
+            FileWriter.shared.cleanFile()
+        } else {
+            // Fallback on earlier versions
         }
     }
     

@@ -14,16 +14,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if #available(iOS 13.4, *) {
             
-            let data = BackgroundData(type: .firstLaunch, time: Date(), count: 0)
+            let data = BackgroundData(type: BackgroundMode.firstLaunch.rawValue, time: Date(), count: 0)
             
-            let log = "\(data.toLog)0"
+            let log = "\n\(data.toLog)"
+            
+            
             
             FileWriter.shared.startWritting(log) {
                 DispatchQueue.main.async {
+                    cleanGroup()
                     saveToGroup(backgroundData: data)
                     NotificationCenter.default.post(name: .backgroundNotification,
                                                     object: self,
                                                     userInfo: ["data": data])
+                    
+                    if let storedData = getBackgroundDataFromGroup {
+//                        timeInterval = storedData.timeIntervalInMinsSince(since: Date())
+//                        count += storedData.count + 1
+                        print("\(storedData)")
+                    } else {
+                        print("GGGGG")
+                    }
                 }
             }
             
@@ -79,7 +90,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         concurrentQueue.async {
             task.expirationHandler = {
-                task.setTaskCompleted(success: false)
+                task.setTaskCompleted(success: true)
             }
             
             var timeInterval = ""
@@ -90,7 +101,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 count += storedData.count + 1
             }
             
-            let data = BackgroundData(type: .appRefresh, time: Date(), count: count)
+            let data = BackgroundData(type: BackgroundMode.appRefresh.rawValue, time: Date(), count: count)
             
             let log = "\(data.toLog)\(timeInterval)"
             
@@ -102,7 +113,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                     userInfo: ["data": data])
                 }
             }
-            task.setTaskCompleted(success: true)
+            task.setTaskCompleted(success: false)
             self.scheduleAppRefresh()
         }
     }
@@ -137,7 +148,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 count += storedData.count + 1
             }
             
-            let data = BackgroundData(type: .processing, time: Date(), count: count)
+            let data = BackgroundData(type: BackgroundMode.processing.rawValue, time: Date(), count: count)
             
             let log = "\(data.toLog)\(timeInterval)"
             

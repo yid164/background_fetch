@@ -27,7 +27,7 @@ struct Item: Codable {
 
 
 struct BackgroundData: Codable {
-    let type: BackgroundMode
+    let type: String
     let time: Date
     let count: Int
     
@@ -37,7 +37,7 @@ struct BackgroundData: Codable {
     }
     
     var toLog: String {
-        return "Mode: \(type.rawValue), Hit Count: \(count), Time Interval Since Last Hit: "
+        return "Mode: \(type), Hit Count: \(count), Time Interval Since Last Hit: "
     }
 }
 
@@ -53,10 +53,21 @@ var getBackgroundDataFromGroup: BackgroundData? {
     if let groupDefault = UserDefaults(suiteName: "background") {
         let decoder: JSONDecoder = JSONDecoder()
         if let data = groupDefault.object(forKey: "backgroundData") as? Data {
+            print("datatata \(data)")
             if let bd = try? decoder.decode(BackgroundData.self, from: data) {
                 return bd
+            } else {
+                print("GGGGGDD")
             }
+        } else {
+            print("SSSS")
         }
     }
     return nil
+}
+
+func cleanGroup() {
+    if let groupDefault = UserDefaults(suiteName: "background") {
+        groupDefault.set(nil, forKey: "backgroundData")
+    }
 }
